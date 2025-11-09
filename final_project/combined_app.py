@@ -1,5 +1,5 @@
 import sys
-import time
+import os  # Added for robust font path
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTextEdit, QFileDialog, QMessageBox,
     QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QFrame,
@@ -23,6 +23,40 @@ class InclusiveReadingAidApp(QMainWindow):
     
     def __init__(self):
         super().__init__()
+        
+        # --- Theme Dictionary ---
+        # Defines all colors for our themes
+        self.THEMES = {
+            "Light (Default)": {
+                "window_bg": "#f0f0f0",
+                "panel_bg": "#ffffff",
+                "text_bg": "#ffffff",
+                "text_color": "#000000",
+                "border_color": "#ccc"
+            },
+            "Dark": {
+                "window_bg": "#2b2b2b",
+                "panel_bg": "#3c3c3c",
+                "text_bg": "#2b2b2b",
+                "text_color": "#ffffff",
+                "border_color": "#555"
+            },
+            "Yellow on Black": {
+                "window_bg": "#1e1e1e",
+                "panel_bg": "#000000",
+                "text_bg": "#000000",
+                "text_color": "#ffff00",
+                "border_color": "#444"
+            },
+            "Blue on Cream": {
+                "window_bg": "#F0E8D9", # Light cream
+                "panel_bg": "#FDF5E6", # Cream
+                "text_bg": "#FDF5E6",
+                "text_color": "#00008B", # Dark Blue
+                "border_color": "#D2B48C" # Tan
+            }
+        }
+        
         self.init_ui()
 
     def init_ui(self):
@@ -72,11 +106,12 @@ class InclusiveReadingAidApp(QMainWindow):
         Create a panel with input/file handling buttons.
         """
         # Create a frame for the button panel
-        button_frame = QFrame()
-        button_frame.setMaximumHeight(80)
-        button_frame.setStyleSheet("""
+        # CHANGED: Made 'self.button_frame' to be accessible by update_style
+        self.button_frame = QFrame()
+        self.button_frame.setMaximumHeight(80)
+        # CHANGED: Removed hard-coded background-color. Will be set in update_style()
+        self.button_frame.setStyleSheet("""
             QFrame {
-                background-color: #f8f9fa;
                 border: 1px solid #dee2e6;
                 border-radius: 10px;
                 margin: 5px;
@@ -84,7 +119,7 @@ class InclusiveReadingAidApp(QMainWindow):
         """)
         
         # Create horizontal layout for buttons
-        button_layout = QHBoxLayout(button_frame)
+        button_layout = QHBoxLayout(self.button_frame)
         button_layout.setSpacing(15)
         button_layout.setContentsMargins(20, 10, 20, 10)
         
@@ -153,17 +188,18 @@ class InclusiveReadingAidApp(QMainWindow):
         button_layout.addStretch()
         
         # Add the button frame to main layout
-        main_layout.addWidget(button_frame)
+        main_layout.addWidget(self.button_frame)
 
     def _create_display_controls(self, main_layout):
         """
         Create display customization controls at the bottom.
         """
         # Create a frame for the controls
-        controls_frame = QFrame()
-        controls_frame.setStyleSheet("""
+        # CHANGED: Made 'self.controls_frame' to be accessible by update_style
+        self.controls_frame = QFrame()
+        # CHANGED: Removed hard-coded background-color. Will be set in update_style()
+        self.controls_frame.setStyleSheet("""
             QFrame {
-                background-color: #f0f0f0;
                 border: 1px solid #ccc;
                 border-radius: 8px;
                 margin: 5px;
@@ -172,7 +208,7 @@ class InclusiveReadingAidApp(QMainWindow):
         """)
         
         # Create layout for controls
-        controls_layout = QFormLayout(controls_frame)
+        controls_layout = QFormLayout(self.controls_frame)
         
         # Font size slider
         self.font_size_slider = QSlider(Qt.Orientation.Horizontal)
@@ -205,12 +241,8 @@ class InclusiveReadingAidApp(QMainWindow):
 
         # Theme dropdown
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems([
-            "Light (Default)", 
-            "Dark", 
-            "Yellow on Black", 
-            "Blue on Cream"
-        ])
+        # CHANGED: Populate from theme dictionary
+        self.theme_combo.addItems(self.THEMES.keys())
         controls_layout.addRow("Theme:", self.theme_combo)
 
         # Connect controls to update function
@@ -221,41 +253,74 @@ class InclusiveReadingAidApp(QMainWindow):
         self.theme_combo.currentTextChanged.connect(self.update_style)
         
         # Add controls frame to main layout
-        main_layout.addWidget(controls_frame)
+        main_layout.addWidget(self.controls_frame)
 
     def update_style(self):
         """
         Update the text area styling based on control values.
-        """        # Get values from controls
+        """
+        # Get values from controls
         font_size = self.font_size_slider.value()
         line_spacing = self.line_spacing_slider.value()
         letter_spacing = self.letter_spacing_slider.value()
         font_family = self.font_combo.currentText()
-        theme = self.theme_combo.currentText()
+        theme_name = self.theme_combo.currentText()
 
-        # Set theme colors
-        if theme == "Dark":
-            bg_color = "#2b2b2b"
-            text_color = "#ffffff"
-        elif theme == "Yellow on Black":
-            bg_color = "#000000"
-            text_color = "#ffff00"
-        elif theme == "Blue on Cream":
-            bg_color = "#FDF5E6"  # Cream
-            text_color = "#00008B"  # Dark Blue
-        else:  # Light (Default)
-            bg_color = "#ffffff"
-            text_color = "#000000"        # Apply styles using CSS with improved color handling
+        # --- CHANGED: Get all theme colors ---
+        theme_colors = self.THEMES.get(theme_name, self.THEMES["Light (Default)"])
+        window_bg = theme_colors["window_bg"]
+        panel_bg = theme_colors["panel_bg"]
+        text_bg = theme_colors["text_bg"]
+        text_color = theme_colors["text_color"]
+        border_color = theme_colors["border_color"]
+
+        # --- CHANGED: Apply theme to main window ---
+        self.centralWidget().setStyleSheet(f"""
+            QWidget {{
+                background-color: {window_bg};
+                color: {text_color};
+            }}
+        """)
+        
+        # --- CHANGED: Apply theme to button panel ---
+        self.button_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {panel_bg};
+                border: 1px solid {border_color};
+                border-radius: 10px;
+                margin: 5px;
+            }}
+        """)
+        
+        # --- CHANGED: Apply theme to controls panel ---
+        self.controls_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {panel_bg};
+                border: 1px solid {border_color};
+                border-radius: 8px;
+                margin: 5px;
+                padding: 10px;
+            }}
+            QLabel {{
+                color: {text_color};
+                font-size: 14px;
+            }}
+            QComboBox, QSlider {{
+                color: {text_color};
+            }}
+        """)
+
+        # --- CHANGED: Apply theme to text area ---
         self.text_area.setStyleSheet(
             f"""
             QTextEdit {{
-                background-color: {bg_color};
+                background-color: {text_bg};
                 color: {text_color} !important;
                 letter-spacing: {letter_spacing}px;
                 font-size: {font_size}pt;
-                font-family: {font_family};
+                font-family: '{font_family}';
                 padding: 15px;
-                border: 1px solid #ccc;
+                border: 1px solid {border_color};
                 border-radius: 8px;
                 selection-background-color: rgba(0, 120, 215, 0.3);
                 selection-color: {text_color};
@@ -270,22 +335,17 @@ class InclusiveReadingAidApp(QMainWindow):
         document = self.text_area.document()
         line_spacing_multiplier = line_spacing / 100.0
         
-        # Save current cursor position
         current_cursor = self.text_area.textCursor()
         current_position = current_cursor.position()
         
-        # Select all text to apply formatting
         cursor = QTextCursor(document)
         cursor.select(QTextCursor.SelectionType.Document)
         
-        # Create block format with line height
         block_format = QTextBlockFormat()
         block_format.setLineHeight(line_spacing_multiplier * 100, 1)  # 1 = ProportionalHeight
         
-        # Apply the formatting
         cursor.mergeBlockFormat(block_format)
         
-        # Restore cursor position
         new_cursor = self.text_area.textCursor()
         new_cursor.setPosition(current_position)
         self.text_area.setTextCursor(new_cursor)
@@ -335,7 +395,7 @@ class InclusiveReadingAidApp(QMainWindow):
                 full_text = []
                 reader = PyPDF2.PdfReader(file_path)
                 for page in reader.pages:
-                    full_text.append(page.extract_text())
+                    full_text.append(page.extract_text() or "") # Add 'or ""' for blank pages
                 
                 content = "\n".join(full_text)
                 self.text_area.setPlainText(content)
@@ -353,12 +413,8 @@ class InclusiveReadingAidApp(QMainWindow):
         
         if file_path:
             try:
-                # Open the image using Pillow
                 img = Image.open(file_path)
-                
-                # Use pytesseract to extract text
                 text = pytesseract.image_to_string(img)
-                
                 self.text_area.setPlainText(text)
                 self.update_style()  # Apply current styling
 
@@ -380,8 +436,8 @@ class InclusiveReadingAidApp(QMainWindow):
             # 1. Hide the main window
             self.hide()
             
-            # Give the window a moment to hide
-            time.sleep(0.5) 
+            # --- CHANGED: Use processEvents() instead of time.sleep() ---
+            QApplication.processEvents()
 
             # 2. Grab the fullscreen screenshot
             screenshot = ImageGrab.grab()
@@ -397,7 +453,7 @@ class InclusiveReadingAidApp(QMainWindow):
             self.update_style()  # Apply current styling
 
         except pytesseract.TesseractNotFoundError:
-            self.show()  # Make sure window is shown if error happens early
+            self.show()
             error_msg = (
                 "Tesseract OCR engine not found.\n\n"
                 "Please make sure Tesseract is installed on your system "
@@ -405,18 +461,26 @@ class InclusiveReadingAidApp(QMainWindow):
             )
             self._show_error("Tesseract Not Found", error_msg)
         except Exception as e:
-            self.show()  # Make sure window is shown on error
+            self.show()
             self._show_error("Screen Capture Error", f"Could not capture or process the screen:\n{e}")
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    
-    # Try to load OpenDyslexic font
-    font_path = "fonts/OpenDyslexic-Regular.otf"
-    font_id = QFontDatabase.addApplicationFont(font_path)
-    if font_id == -1:
-        print(f"Warning: Could not load font from {font_path}")
+      # --- CHANGED: Robust Font Path ---
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Go up one level from final_project to reach the fonts folder
+        font_path = os.path.join(script_dir, "..", "fonts", "OpenDyslexic-Regular.otf")
+        font_path = os.path.abspath(font_path)  # Resolve the path
+        font_id = QFontDatabase.addApplicationFont(font_path)
+        if font_id == -1:
+            print(f"Warning: Could not load font from {font_path}")
+        else:
+            print(f"Successfully loaded font from {font_path}")
+    except Exception as e:
+        print(f"Error loading font: {e}")
+    # --- END CHANGE ---
     
     # Create and show the main window
     main_window = InclusiveReadingAidApp()
