@@ -166,11 +166,15 @@ class DyslexiaReaderApp(QMainWindow):
 # --- This is the standard code to run the application ---
 if __name__ == "__main__":
     app = QApplication(sys.argv)    # --- NEW CODE TO LOAD FONT ---
-    # (Make sure the path and filename are correct!)
-    font_path = "../fonts/OpenDyslexic-Regular.otf"  # Go up one level from frontend folder
+    # Use absolute path to ensure font is found regardless of working directory
+    import os
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    font_path = os.path.join(os.path.dirname(script_dir), "fonts", "OpenDyslexic-Regular.otf")
     font_id = QFontDatabase.addApplicationFont(font_path)
     if font_id == -1:
         print(f"Warning: Could not load font from {font_path}")
+    else:
+        print(f"Successfully loaded font from {font_path}")
     # --- END NEW CODE ---
 
     window = DyslexiaReaderApp()
