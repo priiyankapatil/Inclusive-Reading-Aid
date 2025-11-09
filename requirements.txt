@@ -1,0 +1,4 @@
+PyQt6
+PyPDF2
+Pillow
+pytesseract
