@@ -1,4 +1,5 @@
 import sys
+from PyQt6.QtGui import QFont, QFontDatabase
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTextEdit, QVBoxLayout, QWidget,
     QSlider, QFormLayout, QComboBox
@@ -142,6 +143,14 @@ class DyslexiaReaderApp(QMainWindow):
 # --- This is the standard code to run the application ---
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    # --- NEW CODE TO LOAD FONT ---
+    # (Make sure the path and filename are correct!)
+    font_path = "fonts/OpenDyslexic-Regular.otf" 
+    font_id = QFontDatabase.addApplicationFont(font_path)
+    if font_id == -1:
+        print(f"Warning: Could not load font from {font_path}")
+    # --- END NEW CODE ---
+
     window = DyslexiaReaderApp()
     window.show()
     sys.exit(app.exec())
