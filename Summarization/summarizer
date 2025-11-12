@@ -1,0 +1,30 @@
+from datasets import load_dataset
+
+# --- 1. Load the dataset (this time, just one) ---
+print("Loading 'cnn_dailymail' dataset...")
+dataset = load_dataset("cnn_dailymail", "3.0.0")
+
+# --- 2. Access the 'train' split ---
+# The 'dataset' object is a dictionary. 
+# We'll access the 'train' part.
+train_data = dataset['train']
+
+print(f"Dataset loaded. Total training examples: {len(train_data)}")
+print("\n" + "="*50 + "\n")
+
+# --- 3. Loop and print the first 3 examples ---
+print("Showing the first 3 examples from the 'train' split:\n")
+
+for i in range(3):
+    # Access an example by its index (like a list)
+    example = train_data[i]
+    
+    print(f"--- EXAMPLE {i+1} ---")
+    
+    # 'example' is a Python dictionary. We access its keys.
+    article_text = example['article']
+    highlights_text = example['highlights']
+    
+    print(f"**ARTICLE (Input):**\n{article_text[:400]}...\n") # Print first 400 chars
+    print(f"**HIGHLIGHTS (Target):**\n{highlights_text}\n")
+    print("-"*20 + "\n")
